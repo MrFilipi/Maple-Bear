@@ -1,13 +1,219 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="pt">
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Clock Ninja - Relógio Ninja</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ClockQuest</title>
+    <meta
+      name="description"
+      content="ClockQuest é uma aventura bilíngue para praticar leitura de relógio analógico com gamificação."
+    />
+    <link rel="stylesheet" href="styles/main.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <a href="#mainContent" class="skip-link">Pular para o conteúdo</a>
+    <header class="app-header" role="banner">
+      <div class="logo" aria-label="ClockQuest">
+        <svg aria-hidden="true" viewBox="0 0 120 120" focusable="false">
+          <circle cx="60" cy="60" r="55" class="logo-ring"></circle>
+          <path
+            d="M60 20a5 5 0 0 1 5 5v30l20 10"
+            class="logo-hand"
+            fill="none"
+            stroke-linecap="round"
+          ></path>
+        </svg>
+        <span class="logo-text" data-i18n="brand">ClockQuest</span>
+      </div>
+      <div class="header-controls">
+        <label class="input-group">
+          <span data-i18n="ui.language">Idioma</span>
+          <select id="languageSelect" aria-label="Idioma">
+            <option value="pt">Português</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <label class="input-group">
+          <span data-i18n="ui.difficulty">Dificuldade</span>
+          <select id="difficultySelect" aria-label="Selecione a dificuldade">
+            <option value="easy">Fácil</option>
+            <option value="medium">Média</option>
+            <option value="hard">Difícil</option>
+          </select>
+        </label>
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="contrastToggle" />
+            <span data-i18n="ui.highContrast">Alto contraste</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="minuteToggle" />
+            <span data-i18n="ui.showMinutes">Mostrar minutos</span>
+          </label>
+          <button id="highlightToggle" type="button" class="toggle toggle-button" aria-pressed="false">
+            <span data-i18n="ui.highlightPointers">Realçar ponteiros</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="mainContent" class="app" tabindex="-1">
+      <section class="playground" aria-labelledby="modeTitle">
+        <div class="mode-switch" role="radiogroup" aria-label="Modes">
+          <button class="mode-button is-active" data-mode="learn" role="radio" aria-checked="true">
+            <span data-i18n="modes.learn">Aprender</span>
+          </button>
+          <button class="mode-button" data-mode="practice" role="radio" aria-checked="false">
+            <span data-i18n="modes.practice">Praticar</span>
+          </button>
+          <button class="mode-button" data-mode="challenge" role="radio" aria-checked="false">
+            <span data-i18n="modes.challenge">Desafio</span>
+          </button>
+        </div>
+
+        <div class="clock-wrapper" aria-live="polite">
+          <div id="analogClock" class="clock" aria-label="Relógio analógico interativo"></div>
+          <div class="input-mode-switch">
+            <span class="input-mode-label" data-i18n="ui.answerMode">Modo de resposta:</span>
+            <div role="radiogroup" aria-label="Answer mode" class="input-mode-options">
+              <button class="input-mode-button is-active" data-input="multiple" role="radio" aria-checked="true">
+                <span data-i18n="inputs.multiple">Múltipla escolha</span>
+              </button>
+              <button class="input-mode-button" data-input="typing" role="radio" aria-checked="false">
+                <span data-i18n="inputs.typing">Digitação</span>
+              </button>
+              <button class="input-mode-button" data-input="drag" role="radio" aria-checked="false">
+                <span data-i18n="inputs.drag">Arrastar ponteiros</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="prompt" role="group" aria-labelledby="promptTitle">
+            <h2 id="promptTitle" data-i18n="ui.prompt">Qual é a hora?</h2>
+            <p id="promptText" class="prompt-text"></p>
+            <p id="promptSupport" class="prompt-support"></p>
+          </div>
+
+          <form id="answerForm" class="answer-area" novalidate>
+            <div id="multipleChoice" class="multiple-choice" role="group" aria-label="Opções"></div>
+            <label id="typingField" class="typing-field hidden">
+              <span data-i18n="inputs.typingLabel">Digite em EN ou PT</span>
+              <input
+                id="typingInput"
+                type="text"
+                inputmode="text"
+                autocomplete="off"
+                aria-describedby="typingHint"
+              />
+              <small id="typingHint" data-i18n="inputs.typingHint">Aceita 3:15, three fifteen, três e quinze…</small>
+            </label>
+            <p id="dragHint" class="drag-hint hidden" data-i18n="inputs.dragHint">
+              Arraste os ponteiros para mostrar a hora pedida.
+            </p>
+          </form>
+
+          <div class="actions">
+            <button id="generateBtn" class="action primary">
+              <span data-i18n="ui.generate">Gerar hora</span>
+            </button>
+            <button id="checkBtn" class="action">
+              <span data-i18n="ui.check">Conferir resposta</span>
+            </button>
+            <button id="skipBtn" class="action">
+              <span data-i18n="ui.skip">Pular</span>
+            </button>
+            <button id="hintBtn" class="action hint">
+              <span data-i18n="ui.hint">Dica</span>
+            </button>
+          </div>
+
+          <div class="feedback" aria-live="assertive" id="feedback" role="status"></div>
+        </div>
+      </section>
+
+      <aside class="meta" aria-label="Painel de progresso">
+        <section class="status">
+          <div class="status-item" aria-live="polite">
+            <span class="status-label" data-i18n="stats.lives">Vidas</span>
+            <div id="livesDisplay" class="status-value hearts" aria-label="Vidas restantes"></div>
+          </div>
+          <div class="status-item" aria-live="polite">
+            <span class="status-label" data-i18n="stats.stars">Estrelas</span>
+            <div id="starsDisplay" class="status-value"></div>
+          </div>
+          <div class="status-item" aria-live="polite">
+            <span class="status-label" data-i18n="stats.combo">Combo</span>
+            <div id="comboDisplay" class="status-value"></div>
+          </div>
+          <div class="status-item" aria-live="polite">
+            <span class="status-label" data-i18n="stats.xp">XP</span>
+            <div id="xpDisplay" class="status-value"></div>
+          </div>
+          <div class="status-item" aria-live="polite">
+            <span class="status-label" data-i18n="stats.timer">Cronômetro</span>
+            <div id="timerDisplay" class="status-value"></div>
+          </div>
+        </section>
+
+        <section class="progress" aria-label="Progresso por habilidade">
+          <h3 data-i18n="stats.skills">Habilidades</h3>
+          <ul class="skill-list">
+            <li>
+              <span data-i18n="skills.h1">H1: horas x minutos</span>
+              <div class="progress-bar"><div id="skillH1"></div></div>
+            </li>
+            <li>
+              <span data-i18n="skills.h2">H2: past / half past</span>
+              <div class="progress-bar"><div id="skillH2"></div></div>
+            </li>
+            <li>
+              <span data-i18n="skills.h3">H3: to</span>
+              <div class="progress-bar"><div id="skillH3"></div></div>
+            </li>
+            <li>
+              <span data-i18n="skills.h4">H4: palavra ↔ relógio</span>
+              <div class="progress-bar"><div id="skillH4"></div></div>
+            </li>
+          </ul>
+        </section>
+
+        <section class="leaderboard" aria-label="Ranking local">
+          <header>
+            <h3 data-i18n="challenge.leaderboard">Ranking do desafio</h3>
+            <button id="clearScores" class="linkish" type="button" data-i18n="challenge.clearScores">Limpar</button>
+          </header>
+          <ol id="leaderboardList"></ol>
+        </section>
+
+        <section class="report" aria-live="polite">
+          <h3 data-i18n="challenge.report">Relatório</h3>
+          <dl id="reportList"></dl>
+        </section>
+      </aside>
+    </main>
+
+    <section id="tutorial" class="tutorial hidden" aria-live="polite" aria-label="Tutorial ClockQuest">
+      <div class="tutorial-card" role="dialog" aria-modal="true">
+        <h2 id="tutorialTitle"></h2>
+        <p id="tutorialBody"></p>
+        <div class="tutorial-actions">
+          <button id="tutorialBack" class="action">
+            <span data-i18n="tutorial.back">Voltar</span>
+          </button>
+          <button id="tutorialNext" class="action primary">
+            <span data-i18n="tutorial.next">Próximo</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <p>
+        <span data-i18n="footer.cta">Pronto para publicar?</span>
+        <a href="https://docs.github.com/pt/pages" target="_blank" rel="noopener">GitHub Pages</a>
+      </p>
+    </footer>
+
+    <script type="module" src="scripts/main.js"></script>
   </body>
 </html>
