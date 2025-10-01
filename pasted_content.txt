@@ -1,0 +1,218 @@
+Quero que você crie um site gamificado para ensino de leitura de horas no relógio analógico, pensado para alunos do 4º ano (9–10 anos), bilíngue (PT-BR e EN). Objetivo pedagógico: que o aluno reconheça e produza horas em três formas: (1) analógica (ponteiros), (2) digital (HH:MM), (3) forma verbal em inglês com past, to, quarter past, half past, quarter to. O site deve reduzir frustração com feedback claro, níveis crescentes e prática guiada.
+
+Pilares de produto
+
+Público: crianças de 9–10 anos, alfabetizadas, iniciando “past/to”.
+
+Tom visual: divertido, limpo, sem anúncios, responsivo (desktop/tablet/celular).
+
+Gamificação leve: pontos, estrelas/medalhas, vidas, pistas (hints), progresso salvo em localStorage.
+
+Acessibilidade: teclado/mouse/touch; leitor de tela (aria-labels); alto contraste; sons com botão “mudo”.
+
+Tech/stack
+
+Front-end: React + Vite, Tailwind CSS. Sem backend (usar localStorage).
+
+Linguagem: TypeScript.
+
+Arquitetura: componentes desacoplados, estado com Zustand ou Context API.
+
+Estrutura de páginas/fluxo
+
+/ (Home)
+
+Título: “Relógio Ninja / Clock Ninja”.
+
+Botões: “Aprender”, “Praticar”, “Desafios”, “Professor”.
+
+Toggle idioma PT/EN (persistir escolha).
+
+/aprender (modo Learn)
+
+Relógio analógico central (ponteiros arrastáveis com snap 1 min).
+
+Painel lateral com explicações visuais:
+
+Diferença entre horas (ponteiro curto) e minutos (ponteiro longo).
+
+Faixa past: 1–29 min; half past: 30; to: 31–59 (usar 60−min).
+
+Exemplos animados: 3:15 → “three fifteen / a quarter past three”; 8:40 → “eight forty / twenty to nine”.
+
+Botão “Mostrar/ocultar dica”.
+
+Botão “Ouvir pronúncia” (TTS nativo do browser).
+
+/praticar (modo Practice)
+
+Gerador de itens com 3 tipos de pergunta (configurável):
+
+Arraste os ponteiros para corresponder a um horário digital dado (HH:MM).
+
+Escreva a forma verbal em EN para uma hora analógica mostrada.
+
+Escolha a leitura correta (múltipla escolha) para um relógio exibido.
+
+Feedback imediato: certo/errado; se errar, mostrar explicação:
+“São 40 min → 20 to a próxima hora (9). Então: twenty to nine.”
+
+Pontuação: +10 acerto de primeira; +5 com dica; 3 vidas por sessão; ganhar 1 estrela a cada 5 acertos seguidos.
+
+Dificuldade: Fácil (intervalos de 5 em 5 min), Médio (1 em 1 min, sem ‘0/5’ fixo), Difícil (mistura com ‘quarter/half’ e ‘to’).
+
+/desafios (modo Game)
+
+Missões cronometradas (ex.: 60s para acertar 8 itens).
+
+Boss level: série de 5 itens com variações entre digital→analógico e analógico→forma verbal.
+
+Conquistas: “Mestre do Past”, “Guardião do Half”, “Ninja do To” (desbloqueadas por acertos consecutivos em cada domínio).
+
+/professor (painel simples)
+
+Controles: idioma padrão; dificuldade; habilitar/desabilitar ‘quarter/half’; limitar a faixas (ex.: apenas 1–30 ‘past’) para ensino por etapas.
+
+Exportar progresso (JSON) e reset.
+
+Guia rápido de didática (mini texto embutido).
+
+Componentes principais
+
+<InteractiveClock />
+
+Ponteiro de minutos (360°/60 = 6° por minuto), ponteiro de horas com movimento contínuo (ex.: 3:30 posiciona horas no meio entre 3 e 4).
+
+Interação por arrastar e por setas do teclado (+/−1 min; Shift = +/−5).
+
+Snap a 1 min; opção de travar minutos em múltiplos de 5 (modo Fácil).
+
+Exibe marcos “:05, :10, :15 (quarter past), :30 (half past), :45 (quarter to)” com marcas discretas.
+
+<TimeText /> (renderiza as três formas)
+
+Digital: “HH:MM”.
+
+EN verbal:
+
+Se m==0: “o’clock” (ex.: three o’clock).
+
+1–14,16–29 → “{minutes} past {hour}” (com 15 = “a quarter past”).
+
+30 → “half past {hour}”.
+
+31–44,46–59 → “{60−m} to {hour+1}” (com 45 = “a quarter to”).
+
+PT apoio textual simples: “três e quinze / três e um quarto / três e meia / vinte para as nove”.
+
+<ItemGenerator />
+
+Parâmetros: dificuldade, tiposDePergunta, permitirQuarterHalf, permitirTo, intervaloMinMax.
+
+Gera tempo válido e resposta esperada (digital, analógico, verbalEN).
+
+<FeedbackCard />
+
+Mostra correto/explicação com cores acessíveis e botão “tentar novamente”.
+
+<ProgressStore /> (Zustand)
+
+Guarda pontuação, estrelas, conquistas, preferências, idioma.
+
+Regras de conversão (EN verbal)
+
+h em 1..12 (usar relógio de 12h na forma verbal).
+
+m == 0 → “{hour} o’clock”.
+
+m == 15 → “a quarter past {hour}”.
+
+m == 30 → “half past {hour}”.
+
+1 ≤ m ≤ 29 e m ≠ 15 → “{m} past {hour}”.
+
+m == 45 → “a quarter to {hour+1}` (com wrap 12→1).
+
+31 ≤ m ≤ 59 e m ≠ 45 → “{60−m} to {hour+1}`.
+
+Ortografia dos números até 29 (one, two, three… twenty-nine). Manter tudo em minúsculas.
+
+UX e anti-frustração
+
+Dicas graduais: (1) colorir faixa past (verde) ou to (roxa), (2) destacar próximo número da hora, (3) mostrar contagem “faltam X min para Y”.
+
+Botão “Ver passo a passo” após 2 erros no mesmo item.
+
+Reforço positivo curto: “Nice!”, “Great job!”, “You nailed half past!”.
+
+Idiomas
+
+Toggle PT/EN no topo.
+
+Textos de interface em i18n (JSON).
+
+Forma verbal sempre em inglês (é o objetivo), mas com explicação em PT no Learn/Feedback.
+
+Acessibilidade
+
+Foco visível; navegação por teclado completa.
+
+aria-live para feedback de acerto/erro.
+
+Alternativa textual “Relógio: horas = H, minutos = M” para leitores de tela.
+
+Botão Alto Contraste.
+
+Todos os sons com botão “Som On/Off”.
+
+Métricas (no console ou localStorage)
+
+Itens tentados, taxa de acerto, tempo médio por item, onde erram mais (past vs to vs quarter/half).
+
+Conteúdo inicial (seed)
+
+Exemplos do Learn: 3:00, 3:15, 3:30, 3:45, 8:40, 11:05, 12:55.
+
+Banco de exercícios: todos os minutos, mas priorize múltiplos de 5 no Fácil; incluir aleatórios “quebrados” no Médio/Difícil.
+
+Critérios de aceite (MVP de hoje)
+
+Posso arrastar os ponteiros e ver a hora digital e a forma verbal mudarem em tempo real.
+
+Consigo alternar PT/EN na interface (explicações), mantendo a forma verbal em EN.
+
+Practice gera pelo menos 20 itens aleatórios por sessão, com feedback e pontuação.
+
+Desafios cronometrados funcionam (um modo de 60s).
+
+Progresso (pontos, estrelas, conquistas básicas) persiste em localStorage.
+
+Acessibilidade básica: teclado para minutos/horas, foco visível, aria-labels presentes.
+
+Responsivo e rápido (Lighthouse > 85 em Performance e A11y).
+
+Testes manuais essenciais
+
+3:15 → “a quarter past three”.
+
+3:30 → “half past three”.
+
+3:40 → “twenty to four”.
+
+12:55 → “five to one”.
+
+1:00 → “one o’clock”.
+
+11:05 → “five past eleven”.
+
+Entregáveis
+
+Repositório com README.md (como rodar, como usar).
+
+Build estático pronto (Vite).
+
+Arquivos i18n (pt.json, en.json).
+
+Comentários no código explicando a lógica past/to.
+
+Importante: priorize o /aprender e /praticar hoje; /desafios pode ser simples (1 missão cronometrada). Código claro, modular, com funções puras para conversão de tempo.
